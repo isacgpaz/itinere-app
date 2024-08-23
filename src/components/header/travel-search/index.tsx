@@ -82,10 +82,7 @@ export function TravelSearch() {
           )}
         />
 
-        <Button
-          className="bg-emerald-900 hover:bg-emerald-950 w-full shadow-2xl"
-          type="submit"
-        >
+        <Button variant="secondary" className="w-full shadow-2xl" type="submit">
           Pesquisar viagens
         </Button>
       </form>

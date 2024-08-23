@@ -72,6 +72,10 @@ const config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
+      backgroundImage: {
+        "primary-gradient":
+          "linear-gradient(0deg, rgba(60,196,77,1) 0%, rgba(12,120,29,1) 100%)",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

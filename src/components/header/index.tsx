@@ -2,7 +2,7 @@ import { TravelSearch } from "./travel-search";
 
 export function Header() {
   return (
-    <header className="flex flex-col items-center gap-6 px-8 h-1/4 rounded-b-3xl bg-primary pt-10 pb-48">
+    <header className="flex flex-col items-center gap-6 px-8 h-1/4 rounded-b-3xl bg-green-600 pt-10 pb-48">
       <div className="flex items-center gap-4 text-primary-foreground">
         <span className="font-bold text-3xl">Itinere</span>
 
