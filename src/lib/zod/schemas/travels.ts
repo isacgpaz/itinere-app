@@ -1,4 +1,5 @@
 import { z } from "@/lib/zod";
+import { paginationSchema } from "./shared";
 
 const steps = z.array(
   z.object({
@@ -43,3 +44,20 @@ export const createTravelBodySchema = z.object({
     .min(1, "Motorista é obrigatório.")
     .trim(),
 });
+
+export const findTravelsSearchParamsSchema = z
+  .object({
+    originId: z
+      .string({
+        invalid_type_error: "Origem inválida.",
+        required_error: "Origem é obrigatória.",
+      })
+      .trim(),
+    destinationId: z
+      .string({
+        invalid_type_error: "Destino inválido.",
+        required_error: "Destino é obrigatório.",
+      })
+      .trim(),
+  })
+  .merge(paginationSchema);
