@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Place {
+  id         String       @id @default(uuid())
+  travelStep TravelStep[] @relation("location")
+
+  city  String
+  state String
+
+  name String?
+
+  @@map("places")
+}
+
+model TravelStep {
+  id String @id @default(uuid())
+
+  location   Place  @relation("location", fields: [locationId], references: [id])
+  locationId String
+  travel     Travel @relation(fields: [travelId], references: [id])
+  travelId   String
+
+  durationTime Int?
+
+  @@map("travel_steps")
+}
+
+model Travel {
+  id String @id @default(uuid())
+
+  steps TravelStep[]
+
+  driver   Driver @relation(fields: [driverId], references: [id])
+  driverId String
+
+  name        String?
+  description String?
+
+  @@map("travels")
+}
+
+model User {
+  id String @id @default(uuid())
+
+  name  String
+  phone String
+  email String
+
+  driver Driver?
+
+  @@map("users")
+}
+
+model Driver {
+  id String @id @default(uuid())
+
+  user   User     @relation(fields: [userId], references: [id])
+  userId String   @unique
+  travel Travel[]
+
+  @@map("drivers")
+}
