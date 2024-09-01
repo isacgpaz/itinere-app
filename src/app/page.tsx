@@ -1,12 +1,17 @@
 import { CollaboratorsBanner } from "@/components/collaborators-banner";
 import { Header } from "@/components/header";
+import { Travels } from "@/components/travels";
 
 export default function Home() {
   return (
     <main>
       <Header />
 
-      <div className="mt-12">
+      <div className="flex flex-col gap-6 my-12">
+        <Travels className="mx-8" />
+
+        <hr className="mx-8" />
+
         <CollaboratorsBanner className="mx-8" />
       </div>
     </main>

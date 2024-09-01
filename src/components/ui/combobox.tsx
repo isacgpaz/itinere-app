@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,15 @@ export function Combobox({
             !value && "text-muted-foreground"
           )}
         >
-          {Icon && <Icon className="mr-2 h-4 w-4 shrink-0" />}
+          {Icon && (
+            <>
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 shrink-0 animate-spin" />
+              ) : (
+                <Icon className="mr-2 h-4 w-4 shrink-0" />
+              )}
+            </>
+          )}
 
           <span className="flex-1 block w-full text-left">
             {value ? label : placeholder}

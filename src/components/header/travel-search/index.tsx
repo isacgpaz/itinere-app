@@ -8,8 +8,11 @@ import { MapPin, MapPinned } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useQuery } from "@tanstack/react-query";
 import { findPlaces } from "@/services/places/find-places";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+
 type TravelSearch = {
   destination: string;
   origin?: string;
@@ -19,6 +22,14 @@ type TravelSearch = {
 };
 
 export function TravelSearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const originId = searchParams.get("origin");
+  const destinationId = searchParams.get("destination");
+  const date = searchParams.get("date");
+
   const form = useForm<TravelSearch>({
     defaultValues: {
       destination: "",
@@ -89,8 +100,33 @@ export function TravelSearch() {
   }, [destinationPlacesResult?.result, origin]);
 
   function onSubmit({ destination, origin, date }: TravelSearch) {
-    console.log(destination, origin, date);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("destination", destination);
+
+    if (origin) {
+      params.set("origin", origin);
+    }
+
+    if (date) {
+      params.set("date", date.toISOString());
+    }
+
+    router.push(pathname + "?" + params);
   }
+
+  useEffect(() => {
+    if (originId) {
+      form.setValue("origin", originId);
+    }
+
+    if (destinationId) {
+      form.setValue("destination", destinationId);
+    }
+
+    if (date) {
+      form.setValue("date", new Date(date));
+    }
+  }, [form, originId, destinationId, date]);
 
   return (
     <Form {...form}>

@@ -23,13 +23,22 @@ export async function GET(req: NextRequest) {
       findTravelsSearchParamsSchema.parse(searchParamsRaw);
 
     const query = {
-      steps: {
-        some: {
-          locationId: {
-            in: [originId, destinationId],
+      AND: [
+        {
+          steps: {
+            some: {
+              locationId: originId,
+            },
           },
         },
-      },
+        {
+          steps: {
+            some: {
+              locationId: destinationId,
+            },
+          },
+        },
+      ],
     };
 
     const [travels, travelsCount] = await prisma.$transaction([
