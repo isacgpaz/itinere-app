@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
 import { MapPin, MapPinned } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
-
+import { useQuery } from "@tanstack/react-query";
+import { findPlaces } from "@/services/places/find-places";
+import { useMemo } from "react";
+import { useDebounce } from "@uidotdev/usehooks";
 type TravelSearch = {
   destination: string;
   origin?: string;
   date?: Date;
+  originSearch?: string;
+  destinationSearch?: string;
 };
 
 export function TravelSearch() {
@@ -19,11 +24,69 @@ export function TravelSearch() {
       destination: "",
       origin: "",
       date: undefined,
+      originSearch: "",
+      destinationSearch: "",
     },
   });
 
-  const originOptions: any[] = [];
-  const destinationOptions: any[] = [];
+  const origin = form.watch("origin");
+  const destination = form.watch("destination");
+  const originSearch = form.watch("originSearch");
+  const destinationSearch = form.watch("destinationSearch");
+
+  const debouncedOriginSearch = useDebounce(originSearch, 300);
+  const debouncedDestinationSearch = useDebounce(destinationSearch, 300);
+
+  const { data: originPlacesResult, isLoading: isOriginLoading } = useQuery({
+    queryKey: [
+      "origin-places",
+      { page: 1, pageSize: 50, search: debouncedOriginSearch },
+    ],
+    queryFn: () =>
+      findPlaces({
+        search: debouncedOriginSearch,
+      }),
+  });
+
+  const { data: destinationPlacesResult, isLoading: isDestinationLoading } =
+    useQuery({
+      queryKey: [
+        "destination-places",
+        { page: 1, pageSize: 50, search: debouncedDestinationSearch },
+      ],
+      queryFn: () =>
+        findPlaces({
+          search: debouncedDestinationSearch,
+        }),
+    });
+
+  const originPlaces = useMemo(() => {
+    const places = originPlacesResult?.result ?? [];
+
+    const placesWithoutDestination = places.filter(
+      (place) => place.id !== destination
+    );
+
+    const placesOptions = placesWithoutDestination.map((place) => ({
+      value: place.id,
+      label: `${place.name ?? place.city}-${place.state}`,
+    }));
+
+    return placesOptions;
+  }, [destination, originPlacesResult?.result]);
+
+  const destinationPlaces = useMemo(() => {
+    const places = destinationPlacesResult?.result ?? [];
+
+    const placesWithoutOrigin = places.filter((place) => place.id !== origin);
+
+    const placesOptions = placesWithoutOrigin.map((place) => ({
+      value: place.id,
+      label: `${place.name ?? place.city}-${place.state}`,
+    }));
+
+    return placesOptions;
+  }, [destinationPlacesResult?.result, origin]);
 
   function onSubmit({ destination, origin, date }: TravelSearch) {
     console.log(destination, origin, date);
@@ -39,11 +102,16 @@ export function TravelSearch() {
             <FormItem>
               <FormControl>
                 <Combobox
-                  options={originOptions}
+                  options={originPlaces}
                   onChange={field.onChange}
                   value={field.value}
                   placeholder="Selecione o local de partida..."
+                  onSearchChange={(value) =>
+                    form.setValue("originSearch", value)
+                  }
+                  search={form.watch("originSearch")}
                   searchPlaceholder="Pesquisar o local de partida..."
+                  isLoading={isOriginLoading}
                   icon={MapPin}
                 />
               </FormControl>
@@ -58,11 +126,16 @@ export function TravelSearch() {
             <FormItem>
               <FormControl>
                 <Combobox
-                  options={destinationOptions}
+                  options={destinationPlaces}
                   onChange={field.onChange}
                   value={field.value}
                   placeholder="Selecione o local de destino..."
+                  onSearchChange={(value) =>
+                    form.setValue("destinationSearch", value)
+                  }
+                  search={form.watch("destinationSearch")}
                   searchPlaceholder="Pesquisar o local de destino..."
+                  isLoading={isDestinationLoading}
                   icon={MapPinned}
                 />
               </FormControl>
@@ -82,7 +155,7 @@ export function TravelSearch() {
           )}
         />
 
-        <Button variant="secondary" className="w-full shadow-2xl" type="submit">
+        <Button className="w-full shadow-2xl" type="submit">
           Pesquisar viagens
         </Button>
       </form>

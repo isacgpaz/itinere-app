@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  CommandLoading,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -30,8 +30,11 @@ type ComboboxProps = {
   onChange: (value: string | undefined) => void;
   placeholder?: string;
   searchPlaceholder?: string;
+  search?: string | undefined;
+  onSearchChange?: (value: string | undefined) => void;
   emptyMessage?: string;
   icon?: ElementType;
+  isLoading?: boolean;
 };
 
 export function Combobox({
@@ -40,8 +43,11 @@ export function Combobox({
   onChange,
   placeholder = "Selecionar...",
   searchPlaceholder = "Pesquisar...",
+  search,
+  onSearchChange,
   emptyMessage = "Nenhum resultado encontrado.",
   icon: Icon,
+  isLoading = false,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
 
@@ -71,30 +77,38 @@ export function Combobox({
 
       <PopoverContent className="p-0 popover-content-width-full">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput
+            placeholder={searchPlaceholder}
+            value={search}
+            onValueChange={onSearchChange}
+          />
 
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onChange(currentValue === value ? undefined : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {isLoading && <CommandLoading>Carregando...</CommandLoading>}
+            {!isLoading && <CommandEmpty>{emptyMessage}</CommandEmpty>}
+
+            {options.map((option) => (
+              <CommandItem
+                key={option.value}
+                value={option.label}
+                onSelect={(currentValue) => {
+                  const currentValueId = options.find(
+                    (option) => option.label === currentValue
+                  )?.value;
+                  onChange(currentValue === value ? undefined : currentValueId);
+                  onSearchChange && onSearchChange("");
+                  setOpen(false);
+                }}
+              >
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value === option.value ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                {option.label}
+              </CommandItem>
+            ))}
           </CommandList>
         </Command>
       </PopoverContent>
