@@ -18,14 +18,16 @@ export function CollaboratorsBanner({
       className={cn(className, "p-4 flex justify-between gap-6 bg-muted")}
     >
       <CardHeader className="p-0">
-        <CardTitle className="text-xl ">Contribua com este projeto</CardTitle>
-        <CardDescription className="">
+        <CardTitle className="text-xl">Contribua com este projeto</CardTitle>
+        <CardDescription>
           Adicione novas rotas e pontos de embarque.
         </CardDescription>
       </CardHeader>
 
       <CardFooter className="p-0">
-        <Button size="sm">Quero contribuir</Button>
+        <Button size="sm" variant="dark">
+          Quero contribuir
+        </Button>
       </CardFooter>
     </Card>
   );
