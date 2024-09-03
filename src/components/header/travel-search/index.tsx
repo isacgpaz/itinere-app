@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormControl } from "../../ui/form";
 import { Button } from "@/components/ui/button";
 import { Combobox } from "@/components/ui/combobox";
-import { MapPin, MapPinned } from "lucide-react";
+import { ArrowUpDown, MapPin, MapPinned } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useQuery } from "@tanstack/react-query";
 import { findPlaces } from "@/services/places/find-places";
@@ -14,10 +14,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { findTravels } from "@/services/travels/find-travels";
 import { queryClient } from "@/lib/query";
-import { dayjs } from "@/lib/dayjs";
 
 type TravelSearch = {
-  destination: string;
+  destination?: string;
   origin?: string;
   date?: Date;
   originSearch?: string;
@@ -113,7 +112,14 @@ export function TravelSearch() {
       params.delete(name);
     }
 
-    router.push(`${pathname}?${params}`);
+    router.push(`${pathname}?${params}`, {
+      scroll: false,
+    });
+  }
+
+  function swipeLocations() {
+    form.setValue("origin", destination);
+    form.setValue("destination", origin);
   }
 
   async function onSubmit({ destination, origin, date }: TravelSearch) {
@@ -162,7 +168,10 @@ export function TravelSearch() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 w-full">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-3 w-full relative"
+      >
         <FormField
           control={form.control}
           name="origin"
@@ -189,6 +198,15 @@ export function TravelSearch() {
             </FormItem>
           )}
         />
+
+        <Button
+          size="icon"
+          className="rounded-full absolute top-4 right-10"
+          onClick={swipeLocations}
+          type="button"
+        >
+          <ArrowUpDown className="w-4 h-4" />
+        </Button>
 
         <FormField
           control={form.control}
