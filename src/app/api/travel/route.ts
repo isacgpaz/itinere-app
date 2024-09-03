@@ -41,39 +41,66 @@ export async function GET(req: NextRequest) {
       ],
     };
 
+    const [originTravelSteps, destinationTravelSteps] =
+      await prisma.$transaction([
+        prisma.travelStep.findMany({
+          where: {
+            locationId: originId,
+          },
+          select: {
+            id: true,
+          },
+        }),
+        prisma.travelStep.findMany({
+          where: {
+            locationId: destinationId,
+          },
+          select: {
+            id: true,
+          },
+        }),
+      ]);
+
+    const travelStepsIds = [];
+
+    travelStepsIds.push(
+      ...originTravelSteps.map((travelStep) => travelStep.id)
+    );
+
+    travelStepsIds.push(
+      ...destinationTravelSteps.map((travelStep) => travelStep.id)
+    );
+
     const [travels, travelsCount] = await prisma.$transaction([
-      prisma.travel.findMany({
-        where: query,
-        skip: page * pageSize,
-        take: pageSize,
-        select: {
-          id: true,
-          name: true,
-          steps: {
-            select: {
-              id: true,
-              location: {
-                select: {
-                  id: true,
-                  name: true,
-                  city: true,
-                  state: true,
-                },
-              },
-            },
-          },
-          driver: {
-            select: {
-              id: true,
-              user: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-        },
-      }),
+      prisma.$queryRaw`
+        SELECT 
+          t.*,
+          json_agg(
+            jsonb_build_object(
+              'id', ts."id",
+              'order', ts."order",
+              'durationTime', ts."durationTime",
+              'location', jsonb_build_object(
+                'id', p."id",
+                'city', p."city",
+                'state', p."state",
+                'name', p."name"
+              )
+            )
+            ORDER BY ts."order"
+          ) as steps
+        FROM "travels" t
+        JOIN "travel_steps" o ON o."travelId" = t."id"
+        JOIN "travel_steps" d ON d."travelId" = t."id"
+        JOIN "travel_steps" ts ON ts."travelId" = t."id"
+        JOIN "places" p ON p."id" = ts."locationId"
+        WHERE o."locationId" = ${originId}
+          AND d."locationId" = ${destinationId}
+          AND o."order" < d."order"
+        GROUP BY t."id"
+        ORDER BY t."id"
+        LIMIT ${pageSize} OFFSET ${page * pageSize};
+      `,
       prisma.travel.count({
         where: query,
       }),
@@ -147,6 +174,7 @@ export async function POST(req: Request) {
           create: steps.map((step) => ({
             durationTime: step.durationTime,
             locationId: step.locationId,
+            order: step.order,
           })),
         },
       },
@@ -162,6 +190,7 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
+    console.log(error);
     return NextResponse.json(error);
   }
 }

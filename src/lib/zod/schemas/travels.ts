@@ -10,6 +10,7 @@ const steps = z.array(
       })
       .min(1, "Local de parada é obrigatório.")
       .trim(),
+    order: z.number().int().positive(),
     durationTime: z
       .number({ invalid_type_error: "Duração da parada deve ser um número." })
       .int({

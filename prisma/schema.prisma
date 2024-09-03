@@ -33,6 +33,7 @@ model TravelStep {
   locationId String
   travel     Travel @relation(fields: [travelId], references: [id])
   travelId   String
+  order      Int
 
   durationTime Int?
 
