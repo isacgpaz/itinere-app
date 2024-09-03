@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 export function CollaboratorsBanner({
   className,
@@ -25,9 +26,11 @@ export function CollaboratorsBanner({
       </CardHeader>
 
       <CardFooter className="p-0">
-        <Button size="sm" variant="dark">
-          Quero contribuir
-        </Button>
+        <Link href="/contribute">
+          <Button size="sm" variant="dark">
+            Quero contribuir
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );
