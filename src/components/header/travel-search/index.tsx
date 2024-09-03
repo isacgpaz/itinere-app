@@ -8,10 +8,13 @@ import { MapPin, MapPinned } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useQuery } from "@tanstack/react-query";
 import { findPlaces } from "@/services/places/find-places";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDebounce } from "@uidotdev/usehooks";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { findTravels } from "@/services/travels/find-travels";
+import { queryClient } from "@/lib/query";
+import { dayjs } from "@/lib/dayjs";
 
 type TravelSearch = {
   destination: string;
@@ -26,9 +29,11 @@ export function TravelSearch() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const originId = searchParams.get("origin");
-  const destinationId = searchParams.get("destination");
-  const date = searchParams.get("date");
+  const params = new URLSearchParams(searchParams.toString());
+
+  const originId = params.get("origin");
+  const destinationId = params.get("destination");
+  const date = params.get("date");
 
   const form = useForm<TravelSearch>({
     defaultValues: {
@@ -47,6 +52,8 @@ export function TravelSearch() {
 
   const debouncedOriginSearch = useDebounce(originSearch, 300);
   const debouncedDestinationSearch = useDebounce(destinationSearch, 300);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: originPlacesResult, isLoading: isOriginLoading } = useQuery({
     queryKey: [
@@ -99,19 +106,44 @@ export function TravelSearch() {
     return placesOptions;
   }, [destinationPlacesResult?.result, origin]);
 
-  function onSubmit({ destination, origin, date }: TravelSearch) {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("destination", destination);
-
-    if (origin) {
-      params.set("origin", origin);
+  function updateParams(name: string, value?: string) {
+    if (value) {
+      params.set(name, value);
+    } else {
+      params.delete(name);
     }
 
-    if (date) {
-      params.set("date", date.toISOString());
-    }
+    router.push(`${pathname}?${params}`);
+  }
 
-    router.push(pathname + "?" + params);
+  async function onSubmit({ destination, origin, date }: TravelSearch) {
+    updateParams("origin", origin);
+    updateParams("destination", destination);
+    updateParams("date", date?.toISOString());
+
+    setIsLoading(true);
+
+    await queryClient
+      .ensureQueryData({
+        queryKey: [
+          "travels",
+          {
+            page: 1,
+            pageSize: 15,
+            destinationId: destination,
+            originId: origin,
+            date: date?.toISOString(),
+          },
+        ],
+        queryFn: () =>
+          findTravels({
+            destinationId: destination!,
+            originId: origin!,
+          }),
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   useEffect(() => {
@@ -139,7 +171,10 @@ export function TravelSearch() {
               <FormControl>
                 <Combobox
                   options={originPlaces}
-                  onChange={field.onChange}
+                  onChange={(origin) => {
+                    field.onChange(origin);
+                    // updateParams("origin", origin);
+                  }}
                   value={field.value}
                   placeholder="Selecione o local de partida..."
                   onSearchChange={(value) =>
@@ -163,7 +198,10 @@ export function TravelSearch() {
               <FormControl>
                 <Combobox
                   options={destinationPlaces}
-                  onChange={field.onChange}
+                  onChange={(destination) => {
+                    field.onChange(destination);
+                    // updateParams("destination", destination);
+                  }}
                   value={field.value}
                   placeholder="Selecione o local de destino..."
                   onSearchChange={(value) =>
@@ -185,13 +223,23 @@ export function TravelSearch() {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <DatePicker value={field.value} onChange={field.onChange} />
+                <DatePicker
+                  value={field.value}
+                  onChange={(date) => {
+                    field.onChange(date);
+                    // updateParams("date", date?.toISOString());
+                  }}
+                />
               </FormControl>
             </FormItem>
           )}
         />
 
-        <Button className="w-full shadow-2xl" type="submit">
+        <Button
+          className="w-full shadow-2xl"
+          type="submit"
+          isLoading={isLoading}
+        >
           Pesquisar viagens
         </Button>
       </form>

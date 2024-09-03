@@ -25,7 +25,7 @@ export function TravelCard({ travel }: TravelCardProps) {
     <Card className={"p-4 flex justify-between gap-6 bg-muted"}>
       <CardHeader className="p-0">
         <CardTitle className="text-lg">
-          {origin.name ?? origin.city} - {destination.name ?? destination.city}
+          {origin.name ?? origin.city} x {destination.name ?? destination.city}
         </CardTitle>
 
         <div className="space-y-1">
