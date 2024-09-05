@@ -21,7 +21,7 @@ export function ContributeForm({
 
   const updateTravel = useCallback(
     (travel: Partial<any>) => {
-      setTravel((prevTravel) => ({
+      setTravel((prevTravel: any) => ({
         ...prevTravel,
         ...travel,
       }));
