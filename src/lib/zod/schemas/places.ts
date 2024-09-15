@@ -27,3 +27,14 @@ export const createPlaceBodySchema = z.object({
 
 export const findPlacesSearchParamsSchema =
   paginationSchema.merge(searchSchema);
+
+export const selectPlacesSchema = z.object({
+  places: z.array(
+    z.object({
+      place: z.union([z.string().uuid(), createPlaceBodySchema]),
+      time: z.string(),
+    })
+  ),
+});
+
+export type SelectPlacesSchema = z.infer<typeof selectPlacesSchema>;

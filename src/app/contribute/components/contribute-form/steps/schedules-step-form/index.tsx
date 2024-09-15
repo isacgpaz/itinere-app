@@ -8,7 +8,7 @@ import {
   SchedulesForm,
   schedulesSchema,
 } from "@/lib/zod/schemas/contribute/schedules";
-import { generateTimeSlots } from "@/lib/generate-time-slots";
+import { useMemo } from "react";
 
 const daysOfWeek: { [key in keyof SchedulesForm]: string } = {
   sunday: "DOM",
@@ -21,16 +21,16 @@ const daysOfWeek: { [key in keyof SchedulesForm]: string } = {
 };
 
 const dayFieldDefaultValue = {
-  schedules: [{ start: "07:00" }],
+  schedule: {
+    start: "07:00",
+    end: "09:00",
+  },
   isActive: true,
 };
 
 const weekendFieldDefaultValues = {
-  schedules: [],
   isActive: false,
 };
-
-const timeSlots: string[] = generateTimeSlots();
 
 type SchedulesStepFormProps = {
   currentStep: number;
@@ -48,16 +48,32 @@ export function SchedulesStepForm({
     defaultValues: {
       sunday: weekendFieldDefaultValues,
       monday: dayFieldDefaultValue,
-      tuesday: dayFieldDefaultValue,
-      wednesday: dayFieldDefaultValue,
-      thursday: dayFieldDefaultValue,
-      friday: dayFieldDefaultValue,
+      tuesday: weekendFieldDefaultValues,
+      wednesday: weekendFieldDefaultValues,
+      thursday: weekendFieldDefaultValues,
+      friday: weekendFieldDefaultValues,
       saturday: weekendFieldDefaultValues,
     },
   });
 
+  const schedules = form.watch();
+
+  const enabledDays = useMemo(
+    () =>
+      Object.entries(schedules).filter(([_, dayOfWeek]) => dayOfWeek.isActive),
+    [schedules]
+  );
+
+  const hasInvalidSchedules = useMemo(
+    () =>
+      enabledDays.some(
+        ([_, dayOfWeek]) =>
+          !dayOfWeek.schedule?.start && !dayOfWeek.schedule?.end
+      ) || enabledDays.length === 0,
+    [enabledDays]
+  );
+
   function onSubmit(data: SchedulesForm) {
-    console.log(data);
     updateTravel(data);
     goToNextStep();
   }
@@ -75,13 +91,14 @@ export function SchedulesStepForm({
               key={value}
               dayOfWeek={value as keyof SchedulesForm}
               label={label}
-              timeSlots={timeSlots}
             />
           ))}
         </CardContent>
 
         <CardFooter>
-          <Button className="ml-auto">Avançar</Button>
+          <Button className="ml-auto" disabled={hasInvalidSchedules}>
+            Avançar
+          </Button>
         </CardFooter>
       </form>
     </Form>
